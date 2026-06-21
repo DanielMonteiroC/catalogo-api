@@ -33,12 +33,6 @@ Relendo o README, a documentação escrita já explica bastante as decisões, ma
 
 ---
 
-## Trecho a adicionar no README
-
-Cole isso logo após a seção **"Segurança (OWASP Top 10)"** e antes de **"Estrutura de Diretórios"**:
-
----
-
 ### Decisões de Projeto
 
 **Por que dois bancos de dados?**
