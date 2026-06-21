@@ -1,0 +1,72 @@
+version: '3.9'
+
+services:
+
+  # ── API Node.js ──────────────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: catalogo_api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      JWT_SECRET: ${JWT_SECRET:-segredo_padrao_troque_em_producao}
+      JWT_EXPIRES_IN: 2h
+      PG_HOST: postgres
+      PG_PORT: 5432
+      PG_USER: ${PG_USER:-pguser}
+      PG_PASSWORD: ${PG_PASSWORD:-pgpassword}
+      PG_DATABASE: ${PG_DATABASE:-catalogo_usuarios}
+      MONGO_URI: mongodb://mongo:27017/catalogo_nosql
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_started
+    networks:
+      - catalogo_net
+
+  # ── PostgreSQL ───────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: catalogo_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${PG_USER:-pguser}
+      POSTGRES_PASSWORD: ${PG_PASSWORD:-pgpassword}
+      POSTGRES_DB: ${PG_DATABASE:-catalogo_usuarios}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USER:-pguser}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - catalogo_net
+
+  # ── MongoDB ──────────────────────────────────────────────────────────────────
+  mongo:
+    image: mongo:7-jammy
+    container_name: catalogo_mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - catalogo_net
+
+volumes:
+  postgres_data:
+  mongo_data:
+
+networks:
+  catalogo_net:
+    driver: bridge
